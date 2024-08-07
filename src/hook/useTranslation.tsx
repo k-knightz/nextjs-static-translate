@@ -9,8 +9,7 @@ const loadTranslations = async (locale: string): Promise<Translations> => {
     if (!response.ok) {
         throw new Error(`Could not load translations for locale: ${locale}`);
     }
-    const data = await response.json();
-    return data;
+    return await response.json();
 };
 
 const TranslationContext = createContext<{
