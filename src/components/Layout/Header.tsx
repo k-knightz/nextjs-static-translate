@@ -14,12 +14,12 @@ const Header = () => {
         {
             id: 1,
             path: '/',
-            title: t('menu.home'),
+            title: t('common.menu.home'),
         },
         {
             id: 2,
             path: '/about',
-            title: t('menu.about'),
+            title: t('common.menu.about'),
         }
     ];
 

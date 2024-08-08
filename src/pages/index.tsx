@@ -8,7 +8,7 @@ const Home = () => {
     return (
         <MainLayout>
             <div className="flex flex-col items-center">
-                <h1 className="text-2xl py-6">{t('welcome')}</h1>
+                <h1 className="text-2xl py-6">{t('common.welcome')}</h1>
             </div>
         </MainLayout>
     );
