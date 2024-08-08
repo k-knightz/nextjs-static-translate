@@ -1,13 +1,13 @@
-import {createContext, useContext, useEffect, useState} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type Translations = {
     [key: string]: any;
 };
 
-const loadTranslations = async (locale: string): Promise<Translations> => {
-    const response = await fetch(`/locales/${locale}/common.json`);
+const loadTranslations = async (locale: string, filename: string): Promise<Translations> => {
+    const response = await fetch(`/locales/${locale}/${filename}.json`);
     if (!response.ok) {
-        throw new Error(`Could not load translations for locale: ${locale}`);
+        throw new Error(`Could not load translations for locale: ${locale} and file: ${filename}`);
     }
     return await response.json();
 };
@@ -15,11 +15,13 @@ const loadTranslations = async (locale: string): Promise<Translations> => {
 const TranslationContext = createContext<{
     t: (key: string) => string,
     locale: string,
-    setLocale: (locale: string) => void
+    setLocale: (locale: string) => void,
+    loadTranslationFiles: (filenames: string[]) => Promise<void>
 }>({
     t: (key: string) => key,
     locale: 'th',
-    setLocale: () => {}
+    setLocale: () => {},
+    loadTranslationFiles: async () => {}
 });
 
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,19 +29,31 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const [locale, setLocaleState] = useState<string>('th'); // Default to 'th' initially
 
     useEffect(() => {
-        // Only run this on the client side
         const storedLocale = localStorage.getItem('locale');
         if (storedLocale) {
             setLocaleState(storedLocale);
         }
     }, []);
 
-    useEffect(() => {
-        loadTranslations(locale).then(setTranslations).catch(error => {
+    const loadTranslationFiles = async (filenames: string[]) => {
+        try {
+            const loadedTranslationsArray = await Promise.all(
+                filenames.map((filename) => loadTranslations(locale, filename))
+            );
+            const mergedTranslations = Object.assign({}, ...loadedTranslationsArray);
+            setTranslations(mergedTranslations);
+        } catch (error) {
             console.error(error);
             setTranslations({});
-        });
+        }
+    };
+
+    useEffect(() => {
+        loadTranslationFiles(['common']);
+
     }, [locale]);
+
+
 
     const setLocale = (newLocale: string) => {
         setLocaleState(newLocale);
@@ -64,7 +78,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     return (
-        <TranslationContext.Provider value={{ t, locale, setLocale }}>
+        <TranslationContext.Provider value={{ t, locale, setLocale, loadTranslationFiles }}>
             {children}
         </TranslationContext.Provider>
     );
